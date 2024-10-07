@@ -1,5 +1,4 @@
-
-# Rehau Neasmart 2.0 Gateway 
+# Rehau Neasmart 2.0 Gateway
 
 > **Disclaimer**: This version is a porting of the [original version](https://github.com/MatteoManzoni/RehauNeasmart2.0_Gateway) designed as an add-on for Home Assistant on a Docker container for core installations.
 
@@ -11,11 +10,29 @@ This codebase provides a bridge between the Rehau Neasmart 2.0 SysBus interface 
 
 1. **Configure Adapter**: Set up your Serial to USB adapter or a ModbusRTU Slave to ModbusTCP adapter. Refer to the [waveshare RS485 TO POE ETH (B) how-to guide](./waveshare_poegw_howto.md) for detailed instructions.
 2. **Install Add-On**: Add this add-on repository to your Home Assistant installation.
-3. **Configure Add-On**: 
-  - Specify the Serial port path or listening address in the `listening_address` field.
-  - Set a `listening_port` that matches the ModbusRTU Slave to ModbusTCP adapter configuration.
-  - Choose `tcp` or `serial` as the `server_type` (use `serial` if a Serial port is specified in the listening address).
-  - Set a `slave_id` (valid IDs are 240 and 241). This add-on can coexist with the KNX GW using a different ID.
+3. **Configure Add-On**:
+
+- Create a options.json
+- Specify the Serial port path or listening address in the `listening_address` field.
+- Set a `listening_port` that matches the ModbusRTU Slave to ModbusTCP adapter configuration.
+- Choose `tcp` or `serial` as the `server_type` (use `serial` if a Serial port is specified in the listening address).
+- Set a `slave_id` (valid IDs are 240 and 241). This add-on can coexist with the KNX GW using a different ID.
+
+4. **Add to you docker-compose.yaml config**: Follow this configuration and be sure to place the options.json file in data folder.
+
+### docker-compose.yaml
+
+```
+services:
+  rehau_gateway:
+    image: giacomoalonzi/rehauneasmart_2_0_gateway
+    container_name: rehauneasmart_2_0_gateway
+    ports:
+      - "5000:5000"
+      - "502:502"
+    volumes:
+      - ./data:/data
+```
 
 ## Known Issues
 
@@ -24,4 +41,3 @@ This codebase provides a bridge between the Rehau Neasmart 2.0 SysBus interface 
 - **Storage Limitations**: SQLITE is not optimal for very slow disks, network disks (if missing `flock()`), and SD Cards (frequent writes can damage them).
 - **Flask Development Server**: The add-on uses a Flask development server.
 - **API Authentication & Ingress**: The add-on lacks API authentication and ingress support.
-
