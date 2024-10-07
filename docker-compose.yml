@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  app:
+    image: rehau_nea_smart_2.0_gateway
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./src:/app
+      - ./data:/data
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:5000/health']
+      interval: 2m
+      timeout: 3s
+      retries: 3
+    command: ['python3', 'main.py']

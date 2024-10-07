@@ -1,24 +1,37 @@
+import asyncio
 import logging
 import threading
 import json
-import asyncio
-from flask_app import app  # Import the Flask app
-from modbus_helpers import setup_server_context, run_modbus_server  # Functions for Modbus context and server
+from modbus_helpers import setup_server_context, run_modbus_server
+from flask_app import app
 import const
 
 # Configure the logger
 _logger = logging.getLogger(__name__)
 _logger.setLevel(logging.INFO)
 
+def start_modbus_server(context, addr, server_type):
+    """
+    Start the Modbus server using asyncio.
+    
+    Args:
+        context: The Modbus server context.
+        addr: The address to bind the server to.
+        server_type: The type of server (e.g., 'tcp' or 'serial').
+    """
+    asyncio.run(run_modbus_server(context, addr, server_type))
+
 def load_config():
     """
     Load the configuration from the JSON file.
     
-    :return: A tuple containing the address, port, server type, and slave ID.
-    :raises SystemExit: If the configuration file is not found or cannot be decoded.
+    Returns:
+        A tuple containing the address, port, server type, and slave ID.
+    
+    Raises:
+        SystemExit: If the configuration file is not found or cannot be decoded.
     """
     try:
-        _logger.info(f"Loading configuration from {const.ADDON_OPT_PATH}")
         with open(const.ADDON_OPT_PATH) as f:
             config = json.load(f)
             addr = config.get("listen_address", "0.0.0.0")
@@ -33,34 +46,31 @@ def load_config():
         _logger.critical(f"Error decoding JSON from the configuration file at {const.ADDON_OPT_PATH}")
         exit(1)
 
-async def main():
+def main():
     """
     Main function to start the Modbus and Flask servers.
     """
-    # Load the configuration
     addr, port, server_type, slave_id = load_config()
-
+    
     # Set up the Modbus server context
     context = setup_server_context(const.DATASTORE_PATH)
 
     # Start the Flask server in a separate thread
-    server_thread = threading.Thread(target=app.run, kwargs={'host': addr, 'port': port}, daemon=True)
+    server_thread = threading.Thread(target=app.run, kwargs={'host': addr}, daemon=True)
     server_thread.start()
-    _logger.info("Flask server started.")
 
-    # Configure the Modbus server address based on the connection type
+    # Configure the server address based on the server type
     if server_type == "tcp":
-        server_addr = (addr, port)
+        addr = (addr, port)
     elif server_type == "serial":
-        server_addr = addr
+        addr = addr
     else:
         _logger.critical("Unsupported server type")
         exit(1)
 
     # Start the Modbus server
-    _logger.info(f"Starting Modbus server on {server_type} at {server_addr}")
-    await run_modbus_server(context, server_addr, server_type)
+    start_modbus_server(context, addr, server_type)
 
 if __name__ == "__main__":
     _logger.info("Running the file directly")
-    asyncio.run(main())
+    main()

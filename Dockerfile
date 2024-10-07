@@ -4,6 +4,8 @@ FROM python:3.9-slim
 ENV PYTHONUNBUFFERED=1
 
 COPY src /
+COPY data /data
+
 
 HEALTHCHECK --interval=2m --timeout=3s \
     CMD curl -f http://localhost:5000/health || exit 1
