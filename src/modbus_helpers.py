@@ -5,7 +5,6 @@ from pymodbus.framer import ModbusRtuFramer, ModbusSocketFramer
 from pymodbus.device import ModbusDeviceIdentification
 from pymodbus.datastore import ModbusSequentialDataBlock
 from pymodbus import __version__ as pymodbus_version
-import const
 
 def setup_server_context(datastore_path):
     """
