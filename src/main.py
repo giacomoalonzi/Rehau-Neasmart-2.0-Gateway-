@@ -32,7 +32,6 @@ app = Flask(__name__)
 _logger = logging.getLogger(__name__)
 _logger.setLevel(logging.INFO)
 
-logging.basicConfig(level=logging.DEBUG)
 
 class LockingPersistentDataBlock(ModbusSequentialDataBlock):
     lock = threading.Lock()
@@ -320,7 +319,7 @@ def mode():
                 )
             if not isinstance(op_state, list):
                 op_state = [op_state]
-            logging.debug(f"Setting op_state: {op_state} at address: {zone_addr}")
+            _logger.debug(f"Setting op_state: {op_state} at address: {zone_addr}")
             context[slave_id].setValues(
                 const.READ_HR_CODE,
                 zone_addr,
@@ -331,7 +330,7 @@ def mode():
                 zone_addr,
                 count=len(op_state)
             )
-            logging.debug(f"Read back op_state values: {read_values}")
+            _logger.debug(f"Read back op_state values: {read_values}")
         if setpoint is not None:
             if type(setpoint) is not int and type(setpoint) is not float:
                 return app.response_class(
@@ -342,7 +341,7 @@ def mode():
             dpt_9001_setpoint = dpt_9001.pack_dpt9001(setpoint)
             if not isinstance(dpt_9001_setpoint, list):
                 dpt_9001_setpoint = [dpt_9001_setpoint]
-            logging.debug(f"Setting setpoint: {dpt_9001_setpoint} at address: {zone_addr + const.ZONE_SETPOINT_ADDR_OFFSET}")
+            _logger.debug(f"Setting setpoint: {dpt_9001_setpoint} at address: {zone_addr + const.ZONE_SETPOINT_ADDR_OFFSET}")
             context[slave_id].setValues(
                 const.READ_HR_CODE,
                 zone_addr + const.ZONE_SETPOINT_ADDR_OFFSET,
@@ -353,7 +352,7 @@ def mode():
                 zone_addr + const.ZONE_SETPOINT_ADDR_OFFSET,
                 count=len(dpt_9001_setpoint)
             )
-            logging.debug(f"Read back setpoint values: {read_values}")
+            _logger.debug(f"Read back setpoint values: {read_values}")
 
         response = app.response_class(
             status=202
