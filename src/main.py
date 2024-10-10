@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-# Configura il logging
-
 import asyncio
 import json
 import logging
@@ -299,66 +297,32 @@ def mode():
             status=200,
             mimetype='application/json'
         )
-
     elif request.method == 'POST':
         payload = request.json
-        op_state = payload.get("state")
-        setpoint = payload.get("setpoint")
-        if op_state is None and setpoint is None:
+        op_mode = payload.get("mode")
+        if not op_mode:
             return app.response_class(
-                response=json.dumps({"err": "one of state or setpoint need to be specified"}),
+                response=json.dumps({"err": "missing mode key in payload"}),
                 status=400,
                 mimetype='application/json'
             )
-        if op_state is not None:
-            if type(op_state) is not int or op_state == 0 or op_state > 6:
-                return app.response_class(
-                    response=json.dumps({"err": "invalid state"}),
-                    status=400,
-                    mimetype='application/json'
-                )
-            if not isinstance(op_state, list):
-                op_state = [op_state]
-            _logger.debug(f"Setting op_state: {op_state} at address: {zone_addr}")
-            context[slave_id].setValues(
-                const.READ_HR_CODE,
-                zone_addr,
-                op_state)
-            # Leggi i valori per verificare
-            read_values = context[slave_id].getValues(
-                const.READ_HR_CODE,
-                zone_addr,
-                count=len(op_state)
+        if type(op_mode) is not int or op_mode == 0 or op_mode > 5:
+            return app.response_class(
+                response=json.dumps({"err": "invalid mode"}),
+                status=400,
+                mimetype='application/json'
             )
-            _logger.debug(f"Read back op_state values: {read_values}")
-        if setpoint is not None:
-            if type(setpoint) is not int and type(setpoint) is not float:
-                return app.response_class(
-                    response=json.dumps({"err": "invalid setpoint"}),
-                    status=400,
-                    mimetype='application/json'
-                )
-            dpt_9001_setpoint = dpt_9001.pack_dpt9001(setpoint)
-            if not isinstance(dpt_9001_setpoint, list):
-                dpt_9001_setpoint = [dpt_9001_setpoint]
-            _logger.debug(f"Setting setpoint: {dpt_9001_setpoint} at address: {zone_addr + const.ZONE_SETPOINT_ADDR_OFFSET}")
-            context[slave_id].setValues(
-                const.READ_HR_CODE,
-                zone_addr + const.ZONE_SETPOINT_ADDR_OFFSET,
-                dpt_9001_setpoint)
-            # Leggi i valori per verificare
-            read_values = context[slave_id].getValues(
-                const.READ_HR_CODE,
-                zone_addr + const.ZONE_SETPOINT_ADDR_OFFSET,
-                count=len(dpt_9001_setpoint)
-            )
-            _logger.debug(f"Read back setpoint values: {read_values}")
-
+        if not isinstance(op_mode, list):
+            op_mode = [op_mode]
+        context[slave_id].setValues(
+            const.WRITE_HR_CODE,
+            const.GLOBAL_OP_MODE_ADDR,
+            op_mode)
         response = app.response_class(
-            status=202
+            status=202,
         )
 
-        return response
+    return response
 
 
 @app.route("/state", methods=['POST', 'GET'])
