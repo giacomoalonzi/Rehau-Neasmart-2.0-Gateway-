@@ -40,7 +40,8 @@ class LockingPersistentDataBlock(ModbusSequentialDataBlock):
             if not isinstance(value, list):
                 value = [value]
             for k in range(0, len(value)):
-                self.reg_dict[address + k] = value[k]
+                if self.reg_dict[address + k] != value[k]:
+                    self.reg_dict[address + k] = value[k]
             super().setValues(address, value)
 
     def getValues(self, address, count=1):
@@ -92,6 +93,7 @@ async def run_modbus_server(server_context, server_addr, conn_type):
             "MajorMinorRevision": pymodbus_version,
         }
     )
+    await asyncio.sleep(2)  # Add a delay before starting the server
     if conn_type == "tcp":
         return await StartAsyncTcpServer(
             context=server_context,
